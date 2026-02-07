@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { 
   TrendingUp, Target, BarChart3, MessageSquare, Activity, Zap, Calendar, RefreshCw, 
-  RotateCcw, LayoutGrid, CheckCircle2, LogOut, Settings, Save, Bell, ShieldCheck, AlertCircle, Cpu, Layers
+  RotateCcw, LayoutGrid, CheckCircle2, LogOut, Settings, Save, Bell, ShieldCheck, AlertCircle, Cpu, Layers, Info
 } from 'lucide-react';
 import { 
   STARTING_CAPITAL as DEFAULT_STARTING_CAPITAL, WEEKLY_TARGET_PERCENT, TOTAL_WEEKS, WATCHLIST 
@@ -93,11 +93,18 @@ const App: React.FC = () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
-      // Chunk symbols into groups of 10 to avoid payload limits and stabilize response
       const result = await analyst.fetchMarketData(stocks.map(s => s.symbol));
       setStocks(prev => prev.map(s => {
         const live = result.data[s.symbol];
-        return live ? { ...s, price: live.price, change: live.change, marketCap: live.marketCap } : s;
+        return live ? { 
+          ...s, 
+          price: live.price, 
+          change: live.change, 
+          marketCap: live.marketCap,
+          totalShares: live.totalShares,
+          momentum: live.momentum,
+          earningsForecast: live.earningsForecast
+        } : s;
       }));
     } catch (e) {
       console.error(e);
@@ -195,28 +202,45 @@ const App: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div 
-                onClick={() => setSelectedTicker('NVDA')}
-                className={`p-6 rounded-3xl relative overflow-hidden group cursor-pointer border transition-all shadow-xl ${
-                  selectedTicker === 'NVDA' ? 'bg-emerald-500/10 border-emerald-500/50 ring-1 ring-emerald-500/30' : 'bg-slate-900 border-slate-800'
-                }`}
+                onClick={() => setSelectedTicker(selectedTicker)}
+                className={`col-span-1 md:col-span-2 p-6 rounded-3xl relative overflow-hidden group border transition-all shadow-xl bg-emerald-500/10 border-emerald-500/50 ring-1 ring-emerald-500/30`}
               >
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-4">
                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1">
-                     <Cpu size={12} /> Target: {selectedTicker}
+                     <Cpu size={12} /> Live Focused Asset: {selectedTicker}
                    </span>
-                   <div className="text-[8px] font-black bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full uppercase">Locked</div>
+                   <div className="text-[8px] font-black bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full uppercase">Tactical Feed</div>
                 </div>
-                <div className="text-xl font-black font-mono text-white tracking-tighter">
-                  ${currentStock?.price?.toFixed(2) || '---'}
-                </div>
-                <div className={`text-[10px] font-bold mt-1 uppercase ${currentStock?.change && currentStock.change >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {currentStock?.change ? `${currentStock.change > 0 ? '+' : ''}${currentStock.change.toFixed(2)}%` : '--'}
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <div className="text-3xl font-black font-mono text-white tracking-tighter">
+                      ${currentStock?.price?.toFixed(2) || '---'}
+                    </div>
+                    <div className={`text-xs font-black mt-1 uppercase ${currentStock?.change && currentStock.change >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {currentStock?.change ? `${currentStock.change > 0 ? '+' : ''}${currentStock.change.toFixed(2)}%` : '--'}
+                    </div>
+                  </div>
+                  <div className="space-y-2 border-l border-emerald-500/20 pl-6">
+                    <div>
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Market Cap / Shares</p>
+                      <p className="text-xs font-black text-white font-mono">${currentStock?.marketCap?.toFixed(1) || '--'}B / {currentStock?.totalShares?.toFixed(1) || '--'}B</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Momentum / Forecast</p>
+                      <p className="text-xs font-black text-white flex items-center gap-1.5 uppercase tracking-tighter">
+                         <span className={currentStock?.momentum === 'Bullish' ? 'text-emerald-500' : currentStock?.momentum === 'Bearish' ? 'text-rose-500' : 'text-amber-500'}>
+                            {currentStock?.momentum || '---'}
+                         </span>
+                         <span className="text-slate-700 px-1">|</span>
+                         <span className="text-[10px] font-bold text-slate-400 normal-case line-clamp-1">{currentStock?.earningsForecast || '---'}</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <StatCard title="Current Equity" value={`฿${stats.currentEquity.toLocaleString()}`} icon={<TrendingUp className="text-emerald-500" />} />
               <StatCard title="Total Target" value={`฿${stats.totalTargetFinal.toLocaleString()}`} icon={<Zap className="text-amber-500" />} />
-              <StatCard title="Global Gain" value={`${stats.progressPercent.toFixed(2)}%`} icon={<Activity className="text-blue-500" />} />
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -250,15 +274,20 @@ const App: React.FC = () => {
                                     {stock.symbol[0]}
                                   </div>
                                   <div>
-                                    <p className="text-[11px] font-black text-white">{stock.symbol}</p>
+                                    <div className="flex items-center gap-1.5">
+                                      <p className="text-[11px] font-black text-white">{stock.symbol}</p>
+                                      {stock.momentum === 'Bullish' && <div className="w-1 h-1 rounded-full bg-emerald-500 animate-ping"></div>}
+                                    </div>
                                     <p className="text-[8px] font-bold text-slate-600 uppercase truncate max-w-[100px]">{stock.sector}</p>
                                   </div>
                                 </div>
                                 <div className="text-right">
                                   <p className="text-xs font-black font-mono text-white">${stock.price?.toFixed(1) || '--'}</p>
-                                  <p className={`text-[9px] font-bold ${ (stock.change || 0) >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                                    {stock.change ? `${stock.change > 0 ? '+' : ''}${stock.change.toFixed(1)}%` : '--'}
-                                  </p>
+                                  <div className="flex items-center justify-end gap-1">
+                                    <p className={`text-[9px] font-bold ${ (stock.change || 0) >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                      {stock.change ? `${stock.change > 0 ? '+' : ''}${stock.change.toFixed(1)}%` : '--'}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             ))}

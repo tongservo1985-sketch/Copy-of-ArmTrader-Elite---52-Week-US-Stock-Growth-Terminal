@@ -23,7 +23,10 @@ export interface StockTicker {
   category: StockCategory;
   price?: number;     
   change?: number;    
-  marketCap?: number; 
+  marketCap?: number;
+  totalShares?: number;      // In billions
+  momentum?: 'Bullish' | 'Neutral' | 'Bearish';
+  earningsForecast?: string;  // Next earnings date or growth estimate
 }
 
 export interface TradingSignal {

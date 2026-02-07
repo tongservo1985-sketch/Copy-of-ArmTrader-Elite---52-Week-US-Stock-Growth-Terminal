@@ -82,15 +82,28 @@ export class GeminiAnalyst {
     }
   }
 
-  async fetchMarketData(symbols: string[]) {
-    const prompt = `Find current live stock price, 24h % change, and market cap for these tickers: ${symbols.join(', ')}. 
-    Return ONLY a JSON object in this format: {"SYMBOL": {"price": number, "change": number, "marketCap": number}}
-    No preamble or markdown.`;
+  /**
+   * Fetches latest market data with a retry mechanism for transient Rpc/Proxy 500 errors.
+   */
+  async fetchMarketData(symbols: string[], retries = 2): Promise<{ data: Record<string, any>, sources: any[] }> {
+    const prompt = `Search for LATEST real-time market data for these tickers: ${symbols.join(', ')}.
+    Return a VALID JSON object in exactly this structure:
+    {
+      "SYMBOL": {
+        "price": number,
+        "change": number (24h %),
+        "marketCap": number (in Billions),
+        "totalShares": number (outstanding shares in Billions),
+        "momentum": "Bullish" | "Neutral" | "Bearish",
+        "earningsForecast": "string summary of next earnings outlook"
+      }
+    }
+    ONLY RETURN THE JSON. NO OTHER TEXT.`;
 
     try {
       const ai = this.getClient();
       const response = await ai.models.generateContent({
-        model: "gemini-3-pro-preview",
+        model: "gemini-3-flash-preview",
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],
@@ -105,7 +118,7 @@ export class GeminiAnalyst {
         try {
           data = JSON.parse(jsonMatch[0]);
         } catch (e) {
-          console.warn("Partial JSON extraction failed", e);
+          console.warn("JSON Parse failed on text:", text);
         }
       }
 
@@ -115,8 +128,13 @@ export class GeminiAnalyst {
       })).filter((s: any) => s.uri) || [];
 
       return { data, sources };
-    } catch (error) {
-      console.error("Market data fetch failed:", error);
+    } catch (error: any) {
+      if (retries > 0) {
+        console.warn(`Market data fetch failed, retrying... (${retries} left)`, error);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return this.fetchMarketData(symbols, retries - 1);
+      }
+      console.error("Critical market data fetch failure:", error);
       throw error;
     }
   }
