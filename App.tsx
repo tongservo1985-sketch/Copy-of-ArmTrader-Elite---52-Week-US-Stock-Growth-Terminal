@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { 
   TrendingUp, Target, BarChart3, MessageSquare, Activity, Zap, Calendar, RefreshCw, 
-  RotateCcw, LayoutGrid, CheckCircle2, LogOut, Settings, Save, Bell, ShieldCheck, AlertCircle, Cpu, Layers, Info
+  RotateCcw, LayoutGrid, CheckCircle2, LogOut, Settings, Save, Bell, ShieldCheck, AlertCircle, Cpu, Layers, Info, ListFilter
 } from 'lucide-react';
 import { 
   STARTING_CAPITAL as DEFAULT_STARTING_CAPITAL, WEEKLY_TARGET_PERCENT, TOTAL_WEEKS, WATCHLIST 
@@ -19,11 +19,12 @@ import AlertIngestor from './components/AlertIngestor';
 import GoldenClockMonitor from './components/GoldenClockMonitor';
 import StockVolatilityChart from './components/StockVolatilityChart';
 import TacticalEntryEngine from './components/TacticalEntryEngine';
+import WeeklySelection from './components/WeeklySelection';
 import { GeminiAnalyst } from './services/geminiService';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'plan' | 'analyst' | 'bubbles' | 'alerts'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'plan' | 'analyst' | 'bubbles' | 'alerts' | 'selection'>('dashboard');
   const [weeklyData, setWeeklyData] = useState<WeeklyProgress[]>([]);
   const [stocks, setStocks] = useState<StockTicker[]>(WATCHLIST);
   const [signals, setSignals] = useState<TradingSignal[]>([]);
@@ -153,6 +154,7 @@ const App: React.FC = () => {
 
         <div className="flex-1 space-y-2">
           <NavItem icon={<BarChart3 size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+          <NavItem icon={<ListFilter size={20} />} label="Weekly Picks" active={activeTab === 'selection'} onClick={() => setActiveTab('selection')} />
           <NavItem icon={<LayoutGrid size={20} />} label="Market Map" active={activeTab === 'bubbles'} onClick={() => setActiveTab('bubbles')} />
           <NavItem icon={<Bell size={20} />} label="AI Signals" active={activeTab === 'alerts'} onClick={() => setActiveTab('alerts')} />
           <NavItem icon={<Calendar size={20} />} label="Compounder" active={activeTab === 'plan'} onClick={() => setActiveTab('plan')} />
@@ -176,6 +178,7 @@ const App: React.FC = () => {
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-black text-white uppercase tracking-tight">
                 {activeTab === 'dashboard' && 'Operations Terminal'}
+                {activeTab === 'selection' && 'Weekly AI Selection'}
                 {activeTab === 'bubbles' && 'AI Sector Regime'}
                 {activeTab === 'plan' && '52-Week Growth'}
                 {activeTab === 'analyst' && 'AI Risk Architecture'}
@@ -308,6 +311,7 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {activeTab === 'selection' && <WeeklySelection stocks={stocks} />}
         {activeTab === 'bubbles' && <BubbleMap stocks={stocks} onSelect={(s) => { setSelectedTicker(s); setActiveTab('dashboard'); }} />}
         {activeTab === 'alerts' && <AlertIngestor signals={signals} onNewSignal={(s) => setSignals([s, ...signals])} />}
         {activeTab === 'analyst' && <GeminiAnalystUI />}

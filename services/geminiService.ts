@@ -16,13 +16,13 @@ TACTICAL TIMELINE (TH TIME):
 - 16:00: WARM UP (Premarket). Analyze trends. Observe, don't engage.
 - 18:00: THE FAKE OUT. Watch for "Trap" moves before US open. Caution is priority.
 - 21:30: THE KILL ZONE (Danger). Extreme volatility. Avoid new orders. Protect capital.
-- 23:00: THE DECISION. Market direction emerges. Safe to analyze entry points.
-- 01:00: THE FLOW. Trend is clear. Execute trades. This is the Golden Time.
+- 23:00: THE DECISION. Market direction emerges. Safe to analyze entry points. This is the "Decision Phase".
+- 01:00: THE FLOW. Trend is clear. Execute trades. This is the Golden Time. This is the "Entry Phase".
 - 04:00: THE FADE. Momentum ends. Take profits and exit.
 
 GAME FIX PROTOCOL:
 - If current time is 21:30 - 22:30 (Kill Zone), your verdict MUST BE "NO-GO (DANGER ZONE)".
-- Prioritize Elliott Wave Wave 3 logic during "The Flow" phase.
+- Prioritize Elliott Wave Wave 3 logic during "The Flow" phase for high-probability 4.53% weekly captures.
 
 PHASE 4 GRADING FORMAT:
 1) Phase Name: [e.g., The Flow]
